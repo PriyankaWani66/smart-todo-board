@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smart Todo Board</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="./index.js" defer type="module"></script>
+  </head>
+  <body>
+    <main class="app-container">
+        <h1>Smart Todo Board</h1>
+
+        <form id="todo-form">
+            <input
+                id="todo-input"
+                type="text"
+                placeholder="Enter a new task"
+                autocomplete="off"
+                required
+            />
+            <button type="submit">Submit</button>
+        </form>
+
+        <section class="todo-board">
+            <div class="todo-column">
+                <h2>Pending Tasks</h2>
+                <ul id="pending-todo-list"></ul>
+            </div>
+
+            <div class="todo-column">
+                <h2>Completed Tasks</h2>
+                <ul id="completed-todo-list"></ul>
+            </div>
+        </section>
+    </main>
+  </body>
+</html>
