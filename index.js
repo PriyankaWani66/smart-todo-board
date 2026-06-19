@@ -8,6 +8,8 @@ const completedTodoList = document.getElementById("completed-todo-list");
 
 let todos = [];
 let editingTodoId = null;
+const STORAGE_KEY = "smart-todo-board-todos";
+let nextLocalId = Date.now();
 
 //creates one <li> for one todo
 function createTodoElement(todo){
@@ -90,10 +92,14 @@ async function handleAddTodo(event){
     }
 
     try{
-        const newTodo = await addTodo(text);
-
+        const apiTodo = await addTodo(text);
+        const newTodo = {
+            ...apiTodo,
+            id: Date.now(),
+            isLocalTodo: true,
+        };
         todos.push(newTodo);
-
+        saveTodos();
         todoInput.value = "";
         renderTodos();
     } 
@@ -112,41 +118,53 @@ async function handleTodoAction(event){
 
     const action = button.dataset.action;
     const id = Number(button.dataset.id);
+    const currentTodo = todos.find((todo) => todo.id === id);
 
     try{
         if(action === "delete"){
-            await deleteTodo(id);
+            if (!currentTodo.isLocalTodo){
+                await deleteTodo(id);
+            }
 
             todos = todos.filter((todo) => todo.id !== id);
-
+            saveTodos();
             renderTodos();
+            return;
         }
 
         if(action === "toggle"){
-            const currentTodo = todos.find((todo) => todo.id === id);
-
-            const updatedTodo = await updateTodo(id,{
+            if (!currentTodo.isLocalTodo) {
+                await updateTodo(id, {
                 completed: !currentTodo.completed,
-            });
+                });
+            }
 
             todos = todos.map((todo) => {
-                if (todo.id === id){
-                    return { ...todo, ...updatedTodo };
+                if (todo.id === id) {
+                    return {
+                        ...todo,
+                        completed: !todo.completed,
+                    };
                 }
+
                 return todo;
             });
 
+            saveTodos();
             renderTodos();
+            return;
         }
 
         if (action === "edit"){
             editingTodoId = id;
             renderTodos();
+            return;
         }
 
         if (action === "cancel"){
             editingTodoId = null;
             renderTodos();
+            return;
         }
 
         if (action === "save"){
@@ -158,17 +176,24 @@ async function handleTodoAction(event){
                 return;
             }
 
-            const updatedTodo = await updateTodo(id,{
+            if (!currentTodo.isLocalTodo) {
+                await updateTodo(id, {
                 todo: updatedText,
-            });
+                });
+            }
 
             todos = todos.map((todo) => {
-                if (todo.id === id){
-                    return { ...todo, ...updatedTodo };
+                if (todo.id === id) {
+                    return {
+                        ...todo,
+                        todo: updatedText,
+                    };
                 }
+
                 return todo;
             });
 
+            saveTodos();
             editingTodoId = null;
             renderTodos();
         }
@@ -178,11 +203,23 @@ async function handleTodoAction(event){
     }
 }
 
+function saveTodos(){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+}
+
 //gets initial API data when the app begins
 async function init(){
+    const savedTodos = localStorage.getItem(STORAGE_KEY);
+    if (savedTodos){
+        todos = JSON.parse(savedTodos);
+        renderTodos();
+        return;
+    }
+
     try{
         const data = await getTodos();
         todos = data.todos;
+        saveTodos();
         renderTodos();
     } 
     catch(error){
