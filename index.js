@@ -5,6 +5,7 @@ const todoForm = document.getElementById("todo-form");
 const todoInput = document.getElementById("todo-input");
 const pendingTodoList = document.getElementById("pending-todo-list");
 const completedTodoList = document.getElementById("completed-todo-list");
+const sortTasks = document.getElementById("sort-form");
 
 let todos = [];
 let editingTodoId = null;
@@ -67,6 +68,17 @@ function createTodoElement(todo){
     return todoItem;
 }
 
+function handleSort(event){
+    event.preventDefault();
+
+    todos.sort((a,b) => {
+        return a.todo.localeCompare(b.todo);
+    });
+
+    saveTodos();
+    renderTodos();
+}
+
 //Clears both lists and adds every todo to the correct list
 function renderTodos() {
     pendingTodoList.replaceChildren();
@@ -81,6 +93,7 @@ function renderTodos() {
             pendingTodoList.append(todoItem);
         }
     }
+
 }
 
 //Adds a new todo
@@ -229,7 +242,13 @@ async function init(){
 
 //Event listeners
 todoForm.addEventListener("submit", handleAddTodo);
+sortTasks.addEventListener("submit", handleSort);
 pendingTodoList.addEventListener("click", handleTodoAction);
 completedTodoList.addEventListener("click", handleTodoAction);
 
 init();
+
+
+
+
+
